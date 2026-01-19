@@ -291,6 +291,17 @@ podmianę źródeł danych,
 eksperymentowanie z nowymi modelami NLP.
 
 
+10. client app / web interface (dodatek)
+oprocz samego treningu dorobilem interfejs webowy, zeby mozna bylo testowac te modele "na zywo" w przegladarce. wyglada jak terminal, mozna wpisywac wlasne tweety.
 
+jak to dziala (backend & frontend):
+- serwer: stoi na flasku ('main_server.py'), dziala w trybie inference (bierze gotowe pliki .pkl i robi predykcje).
+- dynamic loading: skrypt sam skanuje folder i jak znajdzie nowe modele (np. random forest czy logreg) to dodaje je do dropdown menu na stronie.
+- SAFETY VALVE (wazne): dodalem logike "bezpiecznika". jak model nie jest pewny (roznica miedzy RISE a DROP jest mniejsza niz 8%), to serwer nadpisuje wynik i zwraca UNCERTAIN. eliminuje to false positives na smieciowych tweetach.
+- frontend: czysty html/css/js w folderach templates/ i static/. zadnego node_modules, lekki kod. stylowa zrobiona pod "orbital terminal" z animacjami css.
+
+jak odpalic te czesc:
+wpisujesz w konsoli: python main_server.py
+i wchodzisz na: http://127.0.0.1:5000
 
 
