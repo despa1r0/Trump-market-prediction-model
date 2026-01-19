@@ -1,0 +1,240 @@
+/* fonts stuff */
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
+
+:root {
+    --purple: #bd00ff;
+    --blue: #00e5ff;
+    --bg-color: #000000;
+    --panel: rgba(10, 0, 30, 0.85);
+    --white: #ffffff;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--white);
+    font-family: 'JetBrains Mono', monospace;
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    position: relative;
+}
+
+/* background animation stuff */
+.space-bg {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    z-index: -1;
+    overflow: hidden;
+    pointer-events: none;
+    background: var(--bg-color);
+}
+
+/* gwiazdki */
+.stars-1, .stars-2, .comets {
+    position: absolute;
+    top: -50%; left: -50%; width: 200%; height: 200%;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+}
+
+.stars-1 {
+    background-image:
+        radial-gradient(1px 1px at 50px 100px, var(--white), transparent),
+        radial-gradient(1px 1px at 150px 300px, var(--blue), transparent),
+        radial-gradient(1px 1px at 300px 50px, var(--white), transparent);
+    background-size: 500px 500px;
+    animation-name: falling;
+    animation-duration: 40s;
+    opacity: 0.5;
+}
+
+.stars-2 {
+    background-image:
+        radial-gradient(2px 2px at 100px 200px, var(--white), transparent),
+        radial-gradient(2px 2px at 300px 100px, var(--blue), transparent),
+        radial-gradient(1.5px 1.5px at 500px 400px, var(--purple), transparent);
+    background-size: 600px 600px;
+    animation-name: falling;
+    animation-duration: 25s;
+    opacity: 0.8;
+}
+
+.comets {
+    background-image:
+        linear-gradient(135deg, var(--blue) 0%, transparent 20%) no-repeat at 100px 100px,
+        linear-gradient(135deg, var(--purple) 0%, transparent 25%) no-repeat at 400px 300px;
+    background-size: 800px 800px;
+    animation-name: falling;
+    animation-duration: 10s;
+    opacity: 0.9;
+    filter: blur(1px);
+}
+
+@keyframes falling {
+    from { transform: translate(0, 0); }
+    to { transform: translate(50%, 50%); }
+}
+
+/* scanlines effect */
+body::after {
+    content: " ";
+    display: block;
+    position: absolute;
+    top: 0; left: 0; bottom: 0; right: 0;
+    background: linear-gradient(rgba(0, 0, 10, 0.1) 50%, rgba(0, 0, 0, 0.2) 50%), 
+                linear-gradient(90deg, rgba(189, 0, 255, 0.03), rgba(0, 229, 255, 0.03), rgba(0, 0, 0, 0.02));
+    z-index: 2;
+    background-size: 100% 4px, 4px 100%;
+    pointer-events: none;
+}
+
+/* main container */
+.box {
+    width: 650px;
+    padding: 2.5rem;
+    border: 3px solid var(--purple);
+    background-color: var(--panel);
+    box-shadow: 0 0 30px rgba(189, 0, 255, 0.3), inset 0 0 20px rgba(0, 229, 255, 0.1);
+    position: relative;
+    z-index: 10;
+    backdrop-filter: blur(5px);
+    border-radius: 8px;
+}
+
+h1 {
+    font-size: 1.6rem;
+    color: var(--purple);
+    border-bottom: 2px solid var(--blue);
+    padding-bottom: 15px;
+    margin-top: 0;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    text-shadow: 0 0 15px var(--purple), 0 0 30px var(--blue);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.input-area { margin: 20px 0; }
+
+textarea {
+    width: 100%;
+    height: 120px;
+    background: rgba(0, 5, 20, 0.6);
+    border: 2px solid var(--blue);
+    color: var(--white);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.1rem;
+    padding: 15px;
+    box-sizing: border-box;
+    resize: none;
+    outline: none;
+    transition: all 0.3s ease;
+    border-radius: 4px;
+}
+
+textarea:focus {
+    box-shadow: 0 0 20px var(--blue);
+    border-color: var(--purple);
+}
+
+/* dropdown for models */
+.selector {
+    margin-bottom: 15px;
+    text-align: right;
+}
+
+select {
+    background: rgba(0, 5, 20, 0.8);
+    color: var(--blue);
+    border: 1px solid var(--purple);
+    padding: 8px 15px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.9rem;
+    cursor: pointer;
+    outline: none;
+    border-radius: 4px;
+    text-transform: uppercase;
+}
+
+select:hover {
+    box-shadow: 0 0 10px var(--purple);
+}
+
+option {
+    background: #000;
+    color: var(--white);
+}
+
+/* button styles */
+button {
+    width: 100%;
+    padding: 18px;
+    background: rgba(189, 0, 255, 0.15);
+    border: 2px solid var(--purple);
+    color: var(--purple);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.3rem;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: 0.3s;
+    font-weight: 700;
+    letter-spacing: 3px;
+    border-radius: 4px;
+    text-shadow: 0 0 5px var(--purple);
+}
+
+button:hover {
+    background: var(--purple);
+    color: var(--white);
+    box-shadow: 0 0 40px var(--purple), 0 0 20px var(--blue);
+    border-color: var(--blue);
+}
+
+/* result section */
+#res-box {
+    margin-top: 30px;
+    padding: 25px;
+    border: 2px solid var(--blue);
+    background: rgba(0, 5, 30, 0.7);
+    display: none;
+    text-align: center;
+    animation: appear 0.6s ease-out;
+    border-radius: 8px;
+}
+
+@keyframes appear {
+    from { opacity: 0; transform: translateY(30px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.label {
+    font-size: 0.9rem;
+    color: var(--blue);
+    opacity: 0.8;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+}
+
+.val {
+    font-size: 2.2rem;
+    font-weight: 800;
+    margin-bottom: 20px;
+    letter-spacing: 1px;
+}
+
+.conf {
+    font-size: 1.4rem;
+    color: var(--white);
+    font-weight: bold;
+}
+
+/* colors for prediction */
+.bullish { color: var(--blue); text-shadow: 0 0 25px var(--blue); }
+.bearish { color: var(--purple); text-shadow: 0 0 25px var(--purple); }
+.neutral { color: var(--white); text-shadow: 0 0 15px var(--white); }
+.spin { animation: spin 4s linear infinite; display: inline-block; }
+@keyframes spin { 100% { transform: rotate(360deg); } }

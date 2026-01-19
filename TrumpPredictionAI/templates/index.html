@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TRUMP ORBITAL TERMINAL</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    <div class="space-bg">
+        <div class="stars-1"></div>
+        <div class="stars-2"></div>
+        <div class="comets"></div>
+    </div>
+
+    <div class="box">
+        <h1>
+            <span>TRUMP ORBITAL PREDICTOR</span>
+            <span class="status-icon spin">💠</span>
+        </h1>
+        
+        <div class="selector">
+            <label for="modelSelect" style="color: var(--blue); font-size: 0.8rem;">ACTIVE MODEL:</label>
+            <select id="modelSelect">
+                <option value="best_model.pkl">🏆 BEST MODEL (CHAMPION)</option>
+                <option value="model_LogReg_Combined.pkl">📊 LOGISTIC REGRESSION (BALANCED)</option>
+                <option value="model_RandomForest_Combined.pkl">🌲 RANDOM FOREST (COMPLEX)</option>
+                <option value="model_LogReg_TextOnly.pkl">📝 TEXT ONLY (PURE)</option>
+            </select>
+        </div>
+
+        <div class="input-area">
+            <textarea id="tweetInput" placeholder="> INCOMING TRANSMISSION DATA..."></textarea>
+        </div>
+
+        <button onclick="run_prediction()" id="analyzeBtn">ENGAGE ANALYSIS PROTOCOL</button>
+
+        <div id="res-box">
+            <div class="label">ANALYSIS OUTCOME:</div>
+            <div id="pred-text" class="val"></div>
+            
+            <div class="label">PROBABILITY MATRIX:</div>
+            <div id="conf-text" class="conf"></div>
+        </div>
+    </div>
+
+    <script>
+        // main logic for sending data
+        async function run_prediction() {
+            const txt_in = document.getElementById('tweetInput');
+            const mod_sel = document.getElementById('modelSelect');
+            const btn = document.getElementById('analyzeBtn');
+            const res_div = document.getElementById('res-box');
+            const p_text = document.getElementById('pred-text');
+            const c_text = document.getElementById('conf-text');
+
+            const txt = txt_in.value.trim();
+            if (!txt) return;
+
+            // loading state
+            btn.innerText = "CALCULATING TRAJECTORY...";
+            btn.disabled = true;
+            res_div.style.display = 'none';
+
+            try {
+                // fetch data from flask
+                const resp = await fetch('/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        tweet: txt,
+                        model_name: mod_sel.value 
+                    })
+                });
+
+                const data = await resp.json();
+
+                // show results
+                res_div.style.display = 'block';
+                p_text.innerText = data.prediction;
+                c_text.innerText = data.confidence;
+                p_text.className = 'val';
+                
+                // styling based on result
+                if (data.prediction.includes('RISE')) {
+                    p_text.classList.add('bullish');
+                    res_div.style.borderColor = 'var(--blue)';
+                    res_div.style.boxShadow = '0 0 30px rgba(0, 229, 255, 0.3)';
+                } else if (data.prediction.includes('DROP')) {
+                    p_text.classList.add('bearish');
+                    res_div.style.borderColor = 'var(--purple)';
+                    res_div.style.boxShadow = '0 0 30px rgba(189, 0, 255, 0.3)';
+                } else {
+                    p_text.classList.add('neutral');
+                    res_div.style.borderColor = 'var(--white)';
+                    res_div.style.boxShadow = '0 0 20px rgba(255, 255, 255, 0.2)';
+                }
+
+            } catch (err) {
+                console.log(err);
+                res_div.style.display = 'block';
+                p_text.innerText = "ORBITAL SYNC FAILURE";
+                p_text.classList.add('bearish');
+                c_text.innerText = "CHECK CONSOLE LOGS";
+            } finally {
+                btn.innerText = "ENGAGE ANALYSIS PROTOCOL";
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
