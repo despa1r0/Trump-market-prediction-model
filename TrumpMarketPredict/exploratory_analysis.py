@@ -1,7 +1,3 @@
-"""
-Exploratory Data Analysis - Exploratory data analysis (2p)
-Analiza eksploracyjna danych - Analiza wstępna (2p)
-"""
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt

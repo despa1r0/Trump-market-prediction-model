@@ -1,6 +1,3 @@
-"""
-Feature Engineering - Creating new features (2p)
-"""
 import pandas as pd
 import numpy as np
 from textblob import TextBlob

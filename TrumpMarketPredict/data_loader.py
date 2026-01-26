@@ -1,9 +1,3 @@
-"""
-Data Loader - BULLETPROOF VERSION /
-Ładowarka danych - WERSJA PANCERNA
-Fixes type reading errors (1.0 vs 1 vs "1") /
-Naprawia błędy odczytu typów (1.0 vs 1 vs "1")
-"""
 import pandas as pd
 import os
 from typing import Tuple
@@ -18,7 +12,7 @@ DEFAULT_FULL_PATH = os.path.join(DEFAULT_DIR, DEFAULT_FILE)
 class DataLoader:
     """Class for robust data loading / Klasa do solidnego ładowania danych."""
 
-    def __init__(self, filepath: str = None):
+    def __init__(self, filepath: str | None = None):
         """
         Args:
             filepath: Path to CSV / Ścieżka do pliku CSV
@@ -27,13 +21,13 @@ class DataLoader:
             self.filepath = DEFAULT_FULL_PATH
         else:
             self.filepath = filepath
-        self.df = None
+        self.df: pd.DataFrame | None = None
         self.X = None
         self.y = None
 
     def load_data(self) -> pd.DataFrame:
         """Loads data with path validation / Ładuje dane z walidacją ścieżki."""
-        print(f"📂 Loading data from: {self.filepath}")
+        print(f"[*] Loading data from: {self.filepath}")
 
         # File search logic / Logika wyszukiwania pliku
         if os.path.exists(self.filepath):
@@ -44,16 +38,15 @@ class DataLoader:
             if os.path.exists(local_path):
                 load_path = local_path
             else:
-                raise FileNotFoundError(f"❌ File not found: {self.filepath}")
+                raise FileNotFoundError(f"[ERROR] File not found: {self.filepath}")
 
         self.df = pd.read_csv(load_path)
-        print(f"✅ Loaded {len(self.df)} rows.")
+        print(f"[OK] Loaded {len(self.df)} rows.")
         return self.df
 
     def clean_data(self) -> pd.DataFrame:
         """Data cleaning logic / Logika czyszczenia danych."""
-        if self.df is None:
-            raise ValueError("Data not loaded / Dane nie zostały załadowane")
+        assert self.df is not None, "Data not loaded / Dane nie zostały załadowane"
 
         # Remove missing values / Usuń brakujące wartości
         self.df = self.df.dropna(subset=['clean_text_nlp', 'Market_Impact'])
@@ -64,8 +57,11 @@ class DataLoader:
         Target creation with ENHANCED type checking /
         Tworzenie celu ze WZMOCNIONĄ weryfikacją typów.
         """
-        print("\n🎯 Creating labels (Target)...")
+        print("\n[*] Creating labels (Target)...")
 
+        if self.df is None:
+             raise ValueError("Data not loaded / Dane nie zostały załadowane")
+        
         if 'is_noise' not in self.df.columns:
             raise ValueError("Column 'is_noise' not found in file! / Brak kolumny 'is_noise'!")
 
@@ -100,19 +96,21 @@ class DataLoader:
         # Display statistics / Wyświetl statystyki
         counts = self.df['target'].value_counts().sort_index()
         total = len(self.df)
-        print(f"📊 Final class distribution:")
-        print(f"   📉 Drop  (-1): {counts.get(-1, 0)} ({counts.get(-1, 0)/total*100:.1f}%)")
-        print(f"   ⚪ Noise  (0): {counts.get(0, 0)} ({counts.get(0, 0)/total*100:.1f}%) <--- SHOULD BE ~67%")
-        print(f"   📈 Rise   (1): {counts.get(1, 0)} ({counts.get(1, 0)/total*100:.1f}%)")
+        print(f"[INFO] Final class distribution:")
+        print(f"   [-1] Drop  (-1): {counts.get(-1, 0)} ({counts.get(-1, 0)/total*100:.1f}%)")
+        print(f"   [0]  Noise  (0): {counts.get(0, 0)} ({counts.get(0, 0)/total*100:.1f}%) <--- SHOULD BE ~67%")
+        print(f"   [+1] Rise   (1): {counts.get(1, 0)} ({counts.get(1, 0)/total*100:.1f}%)")
 
         return self.df['target']
 
     def prepare_features_and_target(self) -> Tuple[pd.Series, pd.Series]:
         """Returns X and y for training / Zwraca X i y do treningu."""
+        assert self.df is not None
         self.X = self.df['clean_text_nlp'].astype(str)
         self.y = self.df['target']
         return self.X, self.y
 
     def get_full_dataframe(self) -> pd.DataFrame:
         """Returns the full internal dataframe / Zwraca pełną wewnętrzną ramkę danych."""
+        assert self.df is not None
         return self.df

@@ -1,6 +1,3 @@
-"""
-Model Trainer using ALL Features (Text + Engineered Features)
-"""
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split, GridSearchCV
@@ -63,7 +60,7 @@ class ModelTrainer:
         
     def split_data(self):
         """Splitting into train/test"""
-        print("✂️  Splitting data into train/test...")
+        print("[*] Splitting data into train/test...")
         
         # Check for target presence
         if 'target' not in self.df.columns:
@@ -79,8 +76,8 @@ class ModelTrainer:
             stratify=y
         )
         
-        print(f"   📊 Train: {len(self.X_train)} samples")
-        print(f"   📊 Test:  {len(self.X_test)} samples")
+        print(f"   [INFO] Train: {len(self.X_train)} samples")
+        print(f"   [INFO] Test:  {len(self.X_test)} samples")
         print(f"\n   Class distribution in train:")
         print(self.y_train.value_counts().sort_index())
         
@@ -98,17 +95,24 @@ class ModelTrainer:
         
     def create_models(self):
         """Creating models with combined features"""
-        print("\n🤖 Creating models with TEXT + NUMERIC features...")
+        print("\n[*] Creating models with TEXT + NUMERIC features...")
         
         numeric_features = self.get_numeric_features()
-        print(f"   📊 Numeric features: {len(numeric_features)}")
+        print(f"   [INFO] Numeric features: {len(numeric_features)}")
         if numeric_features:
-            print(f"   📝 Examples: {numeric_features[:5]}")
+            print(f"   [INFO] Examples: {numeric_features[:5]}")
         
         # 1. TEXT ONLY (baseline)
         self.models['LogReg_TextOnly'] = Pipeline([
             ('text', TextSelector('clean_text_nlp')),
+            # TfidfVectorizer:
+            # - max_features=5000: Limits vocab to top 5k words (Reduces noise / Ogranicza słownictwo do 5k słów, redukuje szum)
+            # - ngram_range=(1, 2): Uses unigrams & bigrams (e.g. "not good" / Używa pojedynczych słów i par słów)
             ('tfidf', TfidfVectorizer(max_features=5000, ngram_range=(1, 2))),
+            
+            # LogisticRegression:
+            # - class_weight='balanced': Penalizes mistakes on rare class more (Helps with imbalance / Karze błędy na rzadkiej klasie)
+            # - max_iter=1000: More time to converge (Więcej czasu na znalezienie rozwiązania)
             ('clf', LogisticRegression(class_weight='balanced', max_iter=1000, 
                                      random_state=self.random_state))
         ])
@@ -129,23 +133,31 @@ class ModelTrainer:
             
             self.models['LogReg_Combined'] = Pipeline([
                 ('features', preprocessor),
+                # LogisticRegression (Combined):
+                # - Same params as above, but now sees text + numbers / Te same parametry, ale teraz widzi tekst + liczby
                 ('clf', LogisticRegression(class_weight='balanced', max_iter=1000,
                                          random_state=self.random_state))
             ])
             
             self.models['RandomForest_Combined'] = Pipeline([
                 ('features', preprocessor),
+                # RandomForest:
+                # - n_estimators=100: Number of trees in forest (More = stable but slower / Liczba drzew w lesie)
+                # - class_weight='balanced': Crucial for detecting rare market drops / Kluczowe dla wykrywania rzadkich spadków
                 ('clf', RandomForestClassifier(class_weight='balanced', n_estimators=100,
                                              random_state=self.random_state))
             ])
             
             self.models['GradientBoosting_Combined'] = Pipeline([
                 ('features', preprocessor),
+                # GradientBoosting:
+                # - n_estimators=100: Trees built sequentially to fix errors / Drzewa budowane sekwencyjnie, by naprawiać błędy
+                # - No class_weight: Boosting handles imbalance by focusing on hard cases / Boosting radzi sobie z nierównowagą, skupiając się na trudnych przypadkach
                 ('clf', GradientBoostingClassifier(n_estimators=100,
                                                  random_state=self.random_state))
             ])
         
-        print(f"   ✅ Created {len(self.models)} models")
+        print(f"   [OK] Created {len(self.models)} models")
         
     def train_all_models(self):
         """Training all models"""
@@ -154,7 +166,7 @@ class ModelTrainer:
         print("=" * 60)
         
         for name, model in self.models.items():
-            print(f"\n🔄 Training {name}...")
+            print(f"\n[*] Training {name}...")
             try:
                 model.fit(self.X_train, self.y_train)
                 
@@ -173,11 +185,11 @@ class ModelTrainer:
                     'predictions': y_pred
                 }
                 
-                print(f"   ✅ Accuracy: {acc:.4f}")
-                print(f"   ✅ F1-Score: {f1:.4f}")
+                print(f"   [OK] Accuracy: {acc:.4f}")
+                print(f"   [OK] F1-Score: {f1:.4f}")
                 
             except Exception as e:
-                print(f"   ❌ Error: {e}")
+                print(f"   [ERROR] Error: {e}")
                 import traceback
                 traceback.print_exc()
                 
@@ -191,7 +203,7 @@ class ModelTrainer:
         print("=" * 60)
         
         if not self.results:
-            print("❌ No trained models! Run train_all_models() first.")
+            print("[ERROR] No trained models! Run train_all_models() first.")
             return
         
         # 1. Identify the winner from initial training
@@ -203,19 +215,27 @@ class ModelTrainer:
         # Keys must allow matching step names in the Pipeline ('clf' or 'tfidf')
         param_grids = {
             'LogReg_Combined': {
+                # C: Regularization strength (Lower = simpler model / Mniejsze C = prostszy model, unikanie overfittingu)
+                # solver: Optimization algorithm / Algorytm optymalizacji
                 'clf__C': [0.1, 1, 10, 100],
                 'clf__solver': ['liblinear', 'lbfgs']
             },
             'LogReg_TextOnly': {
                 'clf__C': [0.1, 1, 10],
+                # max_features: Try different vocabulary sizes / Próbujemy różne rozmiary słownika
                 'tfidf__max_features': [3000, 5000, 7000]
             },
             'RandomForest_Combined': {
+                # n_estimators: More trees? / Więcej drzew?
                 'clf__n_estimators': [100, 200, 300],
+                # max_depth: Tree complexity (None = full depth/overfitting risk / Głębokość drzewa, ryzyko przeuczenia)
                 'clf__max_depth': [None, 10, 20],
+                # min_samples_split: Minimum samples to split a node (Higher = simpler / Minimalna liczba próbek do podziału węzła)
                 'clf__min_samples_split': [2, 5]
             },
             'GradientBoosting_Combined': {
+                # learning_rate: Step size (Lower = more precise but slower / Mniejszy krok = precyzyjniej ale wolniej)
+                # max_depth: Depth of individual weak trees / Głębokość pojedynczych słabych drzew
                 'clf__n_estimators': [100, 200, 300],
                 'clf__learning_rate': [0.01, 0.1, 0.2],
                 'clf__max_depth': [3, 5, 7]
@@ -224,10 +244,10 @@ class ModelTrainer:
         
         # 3. Check if we have a grid for the winner
         if best_name not in param_grids:
-            print(f"⚠️ No hyperparameter grid defined for {best_name}. Skipping tuning.")
+            print(f"[WARN] No hyperparameter grid defined for {best_name}. Skipping tuning.")
             return
 
-        print(f"\n⚙️  Starting Grid Search for {best_name}...")
+        print(f"\n[*] Starting Grid Search for {best_name}...")
         print("   (This involves training many models, please wait...)")
         
         # 4. Run GridSearchCV
@@ -245,7 +265,7 @@ class ModelTrainer:
         grid_search.fit(self.X_train, self.y_train)
         
         # 5. Show results
-        print(f"\n✅ Optimization Complete!")
+        print(f"\n[OK] Optimization Complete!")
         print(f"   Best Params: {grid_search.best_params_}")
         
         # 6. Evaluate optimized model on Test set
@@ -256,7 +276,7 @@ class ModelTrainer:
         new_acc = accuracy_score(self.y_test, y_pred_opt)
         new_f1 = f1_score(self.y_test, y_pred_opt, average='weighted')
         
-        print(f"\n📊 Results after Tuning:")
+        print(f"\n[INFO] Results after Tuning:")
         print(f"   Old F1: {self.results[best_name]['f1_score']:.4f}")
         print(f"   New F1: {new_f1:.4f}")
         
@@ -268,14 +288,14 @@ class ModelTrainer:
     def save_best_model(self, filepath: str = 'best_model.pkl'):
         """Saving the best model"""
         if not self.results:
-            print("❌ No trained models!")
+            print("[ERROR] No trained models!")
             return
             
         best_name = max(self.results.keys(), key=lambda k: self.results[k]['f1_score'])
         best_model = self.results[best_name]['model']
         
         joblib.dump(best_model, filepath)
-        print(f"\n💾 Model {best_name} (Best Version) saved to {filepath}")
+        print(f"\n[SAVE] Model {best_name} (Best Version) saved to {filepath}")
         
     def get_comparison_table(self) -> pd.DataFrame:
         """Model comparison table"""

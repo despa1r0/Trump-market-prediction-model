@@ -1,6 +1,3 @@
-"""
-Unit Tests - Tests for all components (2p)
-"""
 import unittest
 import pandas as pd
 import numpy as np
@@ -8,6 +5,7 @@ from data_loader import DataLoader
 from feature_engineering import FeatureEngineer
 from model_trainer import ModelTrainer
 import os
+
 
 
 
@@ -60,7 +58,10 @@ class TestDataLoader(unittest.TestCase):
         loader.clean_data()
         target = loader.create_target(threshold=0.005)
         
-        self.assertIn('target', loader.df.columns)
+        # Helper for type checking
+        df = loader.df
+        assert df is not None
+        self.assertIn('target', df.columns)
         self.assertTrue(set(target.unique()).issubset({-1, 0, 1}))
     
     def test_prepare_features(self):
@@ -173,25 +174,45 @@ class TestModelTrainer(unittest.TestCase):
     
     def test_split_data(self):
         """Test data splitting"""
-        trainer = ModelTrainer(self.X, self.y, test_size=0.2)
+        # Create a minimal DataFrame with required columns
+        test_df = pd.DataFrame({
+            'clean_text_nlp': self.X,
+            'target': self.y
+        })
+        trainer = ModelTrainer(test_df, test_size=0.2)
         trainer.split_data()
         
         self.assertIsNotNone(trainer.X_train)
         self.assertIsNotNone(trainer.X_test)
+        
+        # Explicit assertions for type checkers
+        assert trainer.X_train is not None
+        assert trainer.X_test is not None
+        
         self.assertEqual(len(trainer.X_train) + len(trainer.X_test), len(self.X))
     
     def test_create_models(self):
         """Test model creation"""
-        trainer = ModelTrainer(self.X, self.y)
+        # Create a minimal DataFrame with required columns
+        test_df = pd.DataFrame({
+            'clean_text_nlp': self.X,
+            'target': self.y
+        })
+        trainer = ModelTrainer(test_df)
         trainer.split_data()
         trainer.create_models()
         
         self.assertGreater(len(trainer.models), 0)
-        self.assertIn('LogisticRegression', trainer.models)
+        self.assertIn('LogReg_TextOnly', trainer.models)
     
     def test_train_models(self):
         """Test model training"""
-        trainer = ModelTrainer(self.X, self.y)
+        # Create a minimal DataFrame with required columns
+        test_df = pd.DataFrame({
+            'clean_text_nlp': self.X,
+            'target': self.y
+        })
+        trainer = ModelTrainer(test_df)
         trainer.split_data()
         trainer.create_models()
         trainer.train_all_models()
@@ -212,9 +233,14 @@ class TestModelPredictions(unittest.TestCase):
     def test_prediction_format(self):
         """Test prediction format"""
         texts = ['test'] * 10
-        labels = [0] * 10
+        labels = [0, 1] * 5
         
-        trainer = ModelTrainer(pd.Series(texts), pd.Series(labels))
+        # Create a minimal DataFrame with required columns
+        test_df = pd.DataFrame({
+            'clean_text_nlp': pd.Series(texts),
+            'target': pd.Series(labels)
+        })
+        trainer = ModelTrainer(test_df)
         trainer.split_data()
         trainer.create_models()
         trainer.train_all_models()
@@ -226,6 +252,8 @@ class TestModelPredictions(unittest.TestCase):
             self.assertTrue(set(predictions).issubset({-1, 0, 1}))
             
             # Number of predictions = number of test samples
+            # Ensure y_test is not None for type checkers
+            assert trainer.y_test is not None
             self.assertEqual(len(predictions), len(trainer.y_test))
 
 
@@ -254,9 +282,9 @@ def run_all_tests():
     print("\n" + "=" * 60)
     print("TEST RESULTS")
     print("=" * 60)
-    print(f"✅ Passed: {result.testsRun - len(result.failures) - len(result.errors)}")
-    print(f"❌ Failed: {len(result.failures)}")
-    print(f"⚠️  Errors: {len(result.errors)}")
+    print(f"[PASS] Passed: {result.testsRun - len(result.failures) - len(result.errors)}")
+    print(f"[FAIL] Failed: {len(result.failures)}")
+    print(f"[WARN] Errors: {len(result.errors)}")
     
     return result.wasSuccessful()
 
