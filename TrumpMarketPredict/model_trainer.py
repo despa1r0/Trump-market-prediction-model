@@ -8,6 +8,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.base import BaseEstimator, TransformerMixin
 import joblib
+from embeddings import GloveVectorizer
 
 
 class ColumnSelector(BaseEstimator, TransformerMixin):
@@ -156,6 +157,36 @@ class ModelTrainer:
                 ('clf', GradientBoostingClassifier(n_estimators=100,
                                                  random_state=self.random_state))
             ])
+            
+            # --- GLOVE MODELS ---
+            
+            # Create transformer for feature combination (GloVe)
+            preprocessor_glove = ColumnTransformer(
+                transformers=[
+                    ('text', GloveVectorizer(model_name='glove-wiki-gigaword-50'), 
+                     'clean_text_nlp'),
+                    ('numeric', StandardScaler(), numeric_features)
+                ],
+                remainder='drop'
+            )
+            
+            self.models['LogReg_Combined_GloVe'] = Pipeline([
+                ('features', preprocessor_glove),
+                ('clf', LogisticRegression(class_weight='balanced', max_iter=1000,
+                                         random_state=self.random_state))
+            ])
+            
+            self.models['RandomForest_Combined_GloVe'] = Pipeline([
+                ('features', preprocessor_glove),
+                ('clf', RandomForestClassifier(class_weight='balanced', n_estimators=100,
+                                             random_state=self.random_state))
+            ])
+
+            self.models['GradientBoosting_Combined_GloVe'] = Pipeline([
+                ('features', preprocessor_glove),
+                ('clf', GradientBoostingClassifier(n_estimators=100,
+                                                 random_state=self.random_state))
+            ])
         
         print(f"   [OK] Created {len(self.models)} models")
         
@@ -239,6 +270,20 @@ class ModelTrainer:
                 'clf__n_estimators': [100, 200, 300],
                 'clf__learning_rate': [0.01, 0.1, 0.2],
                 'clf__max_depth': [3, 5, 7]
+            },
+            # --- GLOVE GRIDS ---
+            'LogReg_Combined_GloVe': {
+                'clf__C': [0.1, 1, 10, 100],
+                'clf__solver': ['liblinear', 'lbfgs']
+            },
+            'RandomForest_Combined_GloVe': {
+                'clf__n_estimators': [100, 200, 300],
+                'clf__max_depth': [None, 10, 20]
+            },
+            'GradientBoosting_Combined_GloVe': {
+                'clf__n_estimators': [100, 200],
+                'clf__learning_rate': [0.01, 0.1],
+                'clf__max_depth': [3, 5]
             }
         }
         

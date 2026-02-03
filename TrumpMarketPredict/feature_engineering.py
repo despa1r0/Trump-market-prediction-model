@@ -18,17 +18,17 @@ class FeatureEngineer:
         
     def add_text_length_features(self):
         """Text length features"""
-        print("📏 Creating text length features...")
+        print("[INFO] Creating text length features...")
         
         self.df['text_length'] = self.df['clean_text_nlp'].str.len()
         self.df['word_count'] = self.df['clean_text_nlp'].str.split().str.len()
         self.df['avg_word_length'] = self.df['text_length'] / (self.df['word_count'] + 1)
         
-        print(f"   ✅ text_length, word_count, avg_word_length")
+        print(f"   [OK] text_length, word_count, avg_word_length")
         
     def add_sentiment_features(self):
         """Text sentiment features"""
-        print("😊 Creating sentiment features...")
+        print("[INFO] Creating sentiment features...")
         
         # Simple sentiment calculation (may be slow on large data)
         def get_sentiment(text):
@@ -40,11 +40,11 @@ class FeatureEngineer:
         # For speed, take only first 1000 characters
         self.df['sentiment_polarity'] = self.df['clean_text_nlp'].str[:1000].apply(get_sentiment)
         
-        print(f"   ✅ sentiment_polarity")
+        print(f"   [OK] sentiment_polarity")
         
     def add_keyword_features(self):
         """Keyword presence features"""
-        print("🔑 Creating keyword features...")
+        print("[INFO] Creating keyword features...")
         
         # Economic keywords
         economy_keywords = ['economy', 'tax', 'trade', 'tariff', 'jobs', 'business', 
@@ -66,11 +66,11 @@ class FeatureEngineer:
             lambda x: count_keywords(x, politics_keywords)
         )
         
-        print(f"   ✅ economy_keyword_count, politics_keyword_count")
+        print(f"   [OK] economy_keyword_count, politics_keyword_count")
         
     def add_capitalization_features(self):
         """Capitalization features"""
-        print("🔠 Creating capitalization features...")
+        print("[INFO] Creating capitalization features...")
         
         self.df['uppercase_ratio'] = self.df['clean_text_nlp'].apply(
             lambda x: sum(1 for c in str(x) if c.isupper()) / (len(str(x)) + 1)
@@ -80,21 +80,21 @@ class FeatureEngineer:
             lambda x: int(any(word.isupper() and len(word) > 2 for word in str(x).split()))
         )
         
-        print(f"   ✅ uppercase_ratio, has_all_caps_word")
+        print(f"   [OK] uppercase_ratio, has_all_caps_word")
         
     def add_punctuation_features(self):
         """Punctuation features"""
-        print("❗ Creating punctuation features...")
+        print("[INFO] Creating punctuation features...")
         
         self.df['exclamation_count'] = self.df['clean_text_nlp'].str.count('!')
         self.df['question_count'] = self.df['clean_text_nlp'].str.count(r'\?')
         
-        print(f"   ✅ exclamation_count, question_count")
+        print(f"   [OK] exclamation_count, question_count")
         
     def add_category_features(self):
         """Category features (if available)"""
         if 'categories' in self.df.columns:
-            print("🏷️  Creating category features...")
+            print("[INFO] Creating category features...")
             
             # One-hot encoding for top categories
             all_categories = []
@@ -113,19 +113,19 @@ class FeatureEngineer:
                     lambda x: int(cat in str(x)) if pd.notna(x) else 0
                 )
             
-            print(f"   ✅ Created {len(top_cats)} category features")
+            print(f"   [OK] Created {len(top_cats)} category features")
     
     def add_temporal_features(self):
         """Temporal features"""
         if 'datetime' in self.df.columns:
-            print("⏰ Creating temporal features...")
+            print("[INFO] Creating temporal features...")
             
             self.df['datetime'] = pd.to_datetime(self.df['datetime'])
             self.df['hour'] = self.df['datetime'].dt.hour
             self.df['day_of_week'] = self.df['datetime'].dt.dayofweek
             self.df['is_weekend'] = (self.df['day_of_week'] >= 5).astype(int)
             
-            print(f"   ✅ hour, day_of_week, is_weekend")
+            print(f"   [OK] hour, day_of_week, is_weekend")
     
     def create_all_features(self):
         """Create all features"""
@@ -145,8 +145,8 @@ class FeatureEngineer:
         
         new_cols = len(self.df.columns) - initial_cols
         
-        print(f"\n✅ Created {new_cols} new features")
-        print(f"📊 Total columns: {len(self.df.columns)}")
+        print(f"\n[OK] Created {new_cols} new features")
+        print(f"[INFO] Total columns: {len(self.df.columns)}")
         
         return self.df
     
@@ -177,7 +177,7 @@ if __name__ == "__main__":
     print("NEW FEATURES:")
     print("=" * 60)
     for feat in engineer.get_feature_names():
-        print(f"  • {feat}")
+        print(f"  - {feat}")
     
-    print(f"\n📊 Sample data:")
+    print(f"\n[INFO] Sample data:")
     print(df_with_features[engineer.get_feature_names()].head())
