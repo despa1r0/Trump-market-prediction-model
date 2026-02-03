@@ -101,17 +101,26 @@ Tworzy ~15 dodatkowych cech:
 - **czasowe**: godzina, dzień tygodnia
 - **kategorie**: binarne flagi tematyczne
 
-### 5.3. `model_trainer`
-Trenuje trzy modele:
+### 5.3. `embeddings.py` (NOWE)
+Moduł odpowiedzialny za wektoryzację tekstu.
+- Ładuje pretrenowane wektory **GloVe** (Global Vectors for Word Representation).
+- Obsługuje brakujące słowa i tworzy gęste wektory (50 wymiarów) dla każdego tweeta.
+- Wymagany zarówno podczas treningu (`TrumpMarketPredict`), jak i na serwerze (`TrumpPredictionAI`).
+
+### 5.4. `model_trainer`
+Trenuje modele w dwóch wariantach (TF-IDF oraz GloVe). Modele:
 1. **Logistic Regression**
 2. **Random Forest**
 3. **Gradient Boosting**
 
-Każdy model działa w pipeline: `TF-IDF Vectorizer + Klasyfikator`.
+Każdy model działa w dwóch wariantach:
+- **TF-IDF Vectorizer**: klasyczne podejście statystyczne (liczenie słów)
+- **GloVe Embeddings**: wektorowa reprezentacja semantyczna (zrozumienie kontekstu)
+
 Modele są oceniane przy pomocy: `accuracy`, `precision`, `recall`, `F1-score`.
 Najlepszy model trafia do **GridSearchCV** w celu dalszej optymalizacji.
 
-### 5.4. `model_evaluator`
+### 5.5. `model_evaluator`
 Generuje raporty klasyfikacji, macierze pomyłek i analizuje błędy predykcji.
 
 ---
@@ -135,12 +144,12 @@ Udostępnia interaktywny interfejs tekstowy.
 
 Plik `.pkl` zawiera: pipeline, listę kolumn, nazwę modelu i metryki.
 
-### `test_models.py` — Testy jednostkowe systemu
-Automatyczne testy dla:
-- **DataLoader**: poprawność CSV, czyszczenie.
-- **FeatureEngineer**: obliczenia cech.
-- **ModelTrainer**: podział danych, trening.
-- **Predykcje**: format wyjścia i liczność.
+### `test_models.py` — Testy jednostkowe i ewaluacja
+Całkowicie przebudowany moduł testowy:
+- **Testy integralności**: Sprawdza poprawność ładowania danych, czyszczenia i formatu wyjścia.
+- **Weryfikacja Embeddings**: Upewnia się, że wektory GloVe są poprawnie generowane i mają odpowiedni wymiar (50d).
+- **Symulacja treningu**: Trenuje lekki model RandomForest na próbce danych, aby wykryć błędy przed pełnym treningiem.
+- **Raportowanie**: Generuje czytelny raport w konsoli (Classification Report) bez konieczności uruchamiania pełnego `main.py`.
 
 Uruchomienie: `python test_models.py`
 
@@ -178,7 +187,8 @@ Wygląda jak **Terminal Orbitalny**, pozwala wpisywać własne tweety.
 
 **Jak to działa:**
 - **Serwer**: Flask (`main_server.py`), działa w trybie *inference*.
-- **Dynamic Loading**: Skanuje folder i automatycznie dodaje nowe modele `.pkl` do menu.
+- **Dynamic Loading**: Skanuje folder i automatycznie dodaje nowe modele (`.pkl`) do menu.
+- **Obsługa Embeddings**: Wykorzystuje `embeddings.py` do ładowania modeli GloVe.
 - **Safety Valve**: "Bezpiecznik" — jeśli pewność modelu jest niska (różnica między RISE a DROP < 8%), serwer zwraca **UNCERTAIN**.
 - **Frontend**: Czysty HTML/CSS/JS (folder `templates/` i `static/`), lekki, bez frameworków.
 
@@ -295,17 +305,26 @@ Creates ~15 additional features:
 - **temporal**: hour, day of the week
 - **categories**: binary thematic flags
 
-### 5.3. `model_trainer`
-Trains three models:
+### 5.3. `embeddings.py` (NEW)
+Module responsible for text vectorization.
+- Loads pre-trained **GloVe** (Global Vectors for Word Representation) vectors.
+- Handles missing words and creates dense vectors (50 dimensions) for each tweet.
+- Required both during training (`TrumpMarketPredict`) and on the server (`TrumpPredictionAI`).
+
+### 5.4. `model_trainer`
+Trains models in two variants (TF-IDF and GloVe). Models:
 1. **Logistic Regression**
 2. **Random Forest**
 3. **Gradient Boosting**
 
-Each model works in a pipeline: `TF-IDF Vectorizer + Classifier`.
+Each model works in two variants:
+- **TF-IDF Vectorizer**: classic statistical approach
+- **GloVe Embeddings**: semantic understanding (using `glove-wiki-gigaword-50`)
+
 Models are evaluated using: `accuracy`, `precision`, `recall`, `F1-score`.
 The best model goes to **GridSearchCV** for further optimization.
 
-### 5.4. `model_evaluator`
+### 5.5. `model_evaluator`
 Generates classification reports, confusion matrices, and analyzes prediction errors.
 
 ---
@@ -329,12 +348,12 @@ Provides an interactive text interface.
 
 The `.pkl` file contains: pipeline, column list, model name, and metrics.
 
-### `test_models.py` — System Unit Tests
-Automatic tests for:
-- **DataLoader**: CSV correctness, cleaning.
-- **FeatureEngineer**: feature calculations.
-- **ModelTrainer**: data splitting, training.
-- **Predictions**: output format and count.
+### `test_models.py` — Unit Tests and Evaluation
+Completely rebuilt testing module:
+- **Integrity Tests**: Checks data loading, cleaning, and output format correctness.
+- **Embeddings Verification**: Ensures GloVe vectors are generated correctly and have the proper dimension (50d).
+- **Training Simulation**: Trains a lightweight RandomForest model on a data sample to catch errors before full training.
+- **Reporting**: Generates a readable console report (Classification Report) without needing to run the full `main.py`.
 
 Run: `python test_models.py`
 
@@ -372,7 +391,8 @@ It looks like an **Orbital Terminal** and allows you to enter your own tweets.
 
 **How it works:**
 - **Server**: Flask (`main_server.py`), runs in *inference* mode.
-- **Dynamic Loading**: Scans the folder and automatically adds new `.pkl` models to the menu.
+- **Dynamic Loading**: Skanuje folder i automatically adds new `.pkl` models to the menu.
+- **Embeddings Support**: Uses `embeddings.py` to load GloVe-based models.
 - **Safety Valve**: If model confidence is low (difference between RISE and DROP < 8%), the server returns **UNCERTAIN**.
 - **Frontend**: Pure HTML/CSS/JS (folders `templates/` and `static/`), lightweight, no frameworks.
 
