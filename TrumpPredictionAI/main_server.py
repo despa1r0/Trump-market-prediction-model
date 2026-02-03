@@ -7,6 +7,12 @@ import numpy as np
 import datetime
 from flask import Flask, render_template, request, jsonify
 
+# Import embeddings to allow unpickling of GloVe models
+try:
+    from embeddings import GloveVectorizer
+except ImportError:
+    print("[WARN] embeddings.py not found. GloVe models might fail to load.")
+
 # fix coding on windows bo blendy wyskakuja
 if sys.platform == "win32":
     import io
@@ -21,7 +27,10 @@ model_files = {
     'best_model.pkl': 'Best Model',
     'model_LogReg_Combined.pkl': 'LogReg Combined',
     'model_LogReg_TextOnly.pkl': 'LogReg TextOnly',
-    'model_RandomForest_Combined.pkl': 'RandomForest Combined'
+    'model_RandomForest_Combined.pkl': 'RandomForest Combined',
+    'model_LogReg_Combined_GloVe.pkl': 'LogReg GloVe',
+    'model_RandomForest_Combined_GloVe.pkl': 'RandomForest GloVe',
+    'model_GradientBoosting_Combined_GloVe.pkl': 'GradientBoosting GloVe'
 }
 
 # ladowanie modeli przy starcie
